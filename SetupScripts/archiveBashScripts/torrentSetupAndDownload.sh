@@ -20,17 +20,13 @@ mkdir data/torrent
 gcsfuse cu-boulder-echo-chambers-twitter-data data/torrent
 
 
-
 #Setup Transmission
-
 sudo add-apt-repository ppa:transmissionbt/ppa
 sudo apt-get update
 sudo apt-get install transmission-cli transmission-common transmission-daemon
 sudo service transmission-daemon start
 
-
 #Get Torrent and start it
-
 wget https://archive.org/download/archiveteam-twitter-stream-2017-04/archiveteam-twitter-stream-2017-04_archive.torrent
 mkdir tar
 transmission-cli archiveteam-twitter-stream-2017-04_archive.torrent -w tar/
