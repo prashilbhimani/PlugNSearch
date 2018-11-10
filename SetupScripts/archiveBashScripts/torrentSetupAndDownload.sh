@@ -1,13 +1,11 @@
 
 #Create Instance
-gcloud beta compute --project="independentstudy-219521" instances create try1 --zone=us-east1-b --machine-type=n1-standard-4 --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --service-account=35692078130-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/cloud-platform --tags=http-server,https-server --image=debian-9-stretch-v20181011 --image-project=debian-cloud --boot-disk-size=50GB --boot-disk-type=pd-standard --boot-disk-device-name=try1
+gcloud beta compute --project="datacenterscaleproject" instances create attempt1 --zone=us-east1-b --machine-type=n1-standard-4 --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --service-account=35692078130-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/cloud-platform --tags=http-server,https-server --image=debian-9-stretch-v20181011 --image-project=debian-cloud --boot-disk-size=50GB --boot-disk-type=pd-standard --boot-disk-device-name=attempt1
 
-sleep 5
 #SSH in Machine
-gcloud compute --project "independentstudy-219521" ssh --zone "us-east1-b" "try1"
+gcloud compute --project "datacenterscaleproject" ssh --zone "us-east1-b" "attempt1"
 
 echo "Instance created"
-
 
 #Setup gscfuse
 export GCSFUSE_REPO=gcsfuse-`lsb_release -c -s`
