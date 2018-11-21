@@ -38,6 +38,7 @@ transmission-remote -n 'transmission:transmission' -a data.torrent # error
 #gcloud beta compute --project="datacenterscaleproject" instances create torrentgetter --zone=us-east1-b --machine-type=n1-standard-4 --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --scopes=https://www.googleapis.com/auth/cloud-platform --tags=http-server,https-server,torrentmachine --image=ubuntu-minimal-1804-bionic-v20181114 --image-project=ubuntu-os-cloud --boot-disk-size=100GB --boot-disk-type=pd-standard --boot-disk-device-name=torrentgetter
 #gcloud compute firewall-rules create torrentfirewall --direction=INGRESS --priority=1000 --network=default --action=ALLOW --rules=tcp:51413,udp:51413 --source-ranges=0.0.0.0/0 --target-tags=torrentmachine
 #gcloud compute firewall-rules create scpfirewall --direction=INGRESS --priority=1000 --network=default --action=ALLOW --rules=tcp:22 --source-ranges=0.0.0.0/0 --target-tags=torrentmachine
+gcloud compute --project "datacenterscaleproject" ssh --zone "us-east1-b" "torrentgetter"
 gcloud compute  scp --zone "us-east1-b" torrent.sh torrentgetter:~/
 gcloud compute  scp --zone "us-east1-b" data.torrent torrentgetter:~/
 gcloud compute --project "datacenterscaleproject" ssh --zone "us-east1-b" "torrentgetter" --command "chmod +x torrent.sh && ./torrent.sh"
