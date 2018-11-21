@@ -1,4 +1,5 @@
 import time
+import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 HOST_NAME = 'localhost'
@@ -32,16 +33,20 @@ class MyHandler(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'text/html')
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
-        content = '''
-        <html><head><title>Title goes here.</title></head>
-        <body><p>This is a test.</p>
-        <p>You accessed path: {}</p>
-        </body></html>
-        '''.format(path)
-        return bytes(content, 'UTF-8')
+        # content = '''
+        # <html><head><title>Title goes here.</title></head>
+        # <body><p>This is a test.</p>
+        # <p>You accessed path: {}</p>
+        # </body></html>
+        # '''.format(path)
+        # return bytes(content, 'UTF-8')
+        content = {'hello' : 5}
+        stringedjson = json.dumps(content)
+        return bytes(stringedjson, 'UTF-8')
 
     def respond(self, opts):
         response = self.handle_http(opts['status'], self.path)
+        print("in response:: ", response)
         self.wfile.write(response)
 
 if __name__ == '__main__':
