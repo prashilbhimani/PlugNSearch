@@ -1,6 +1,6 @@
 ## Will write a script that will do all that we discussed
 ## $1 = The data
-## 
+## $2 = Number of Kafka nodes
 
 
 ## Initial Setup of variables
@@ -35,10 +35,16 @@ transmission-remote -n 'transmission:transmission' -a data.torrent # error
 
 
 # Step 4: Create gcloud machine and setting it up to take the input
-#gcloud beta compute --project="datacenterscaleproject" instances create torrentgetter --zone=us-east1-b --machine-type=n1-standard-4 --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --scopes=https://www.googleapis.com/auth/cloud-platform --tags=http-server,https-server,torrentmachine --image=ubuntu-minimal-1804-bionic-v20181114 --image-project=ubuntu-os-cloud --boot-disk-size=100GB --boot-disk-type=pd-standard --boot-disk-device-name=torrentgetter
-#gcloud compute firewall-rules create torrentfirewall --direction=INGRESS --priority=1000 --network=default --action=ALLOW --rules=tcp:51413,udp:51413 --source-ranges=0.0.0.0/0 --target-tags=torrentmachine
-#gcloud compute firewall-rules create scpfirewall --direction=INGRESS --priority=1000 --network=default --action=ALLOW --rules=tcp:22 --source-ranges=0.0.0.0/0 --target-tags=torrentmachine
+gcloud beta compute --project="datacenterscaleproject" instances create torrentgetter --zone=us-east1-b --machine-type=n1-standard-4 --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --scopes=https://www.googleapis.com/auth/cloud-platform --tags=http-server,https-server,torrentmachine --image=ubuntu-minimal-1804-bionic-v20181114 --image-project=ubuntu-os-cloud --boot-disk-size=100GB --boot-disk-type=pd-standard --boot-disk-device-name=torrentgetter
+gcloud compute firewall-rules create torrentfirewall --direction=INGRESS --priority=1000 --network=default --action=ALLOW --rules=tcp:51413,udp:51413 --source-ranges=0.0.0.0/0 --target-tags=torrentmachine
+gcloud compute firewall-rules create scpfirewall --direction=INGRESS --priority=1000 --network=default --action=ALLOW --rules=tcp:22 --source-ranges=0.0.0.0/0 --target-tags=torrentmachine
 gcloud compute --project "datacenterscaleproject" ssh --zone "us-east1-b" "torrentgetter"
 gcloud compute  scp --zone "us-east1-b" torrent.sh torrentgetter:~/
 gcloud compute  scp --zone "us-east1-b" data.torrent torrentgetter:~/
 gcloud compute --project "datacenterscaleproject" ssh --zone "us-east1-b" "torrentgetter" --command "chmod +x torrent.sh && ./torrent.sh"
+
+# Step 5: Recursive unzip
+
+# Step 6: Set up kafka
+
+# Step 7 : Send to kafka
