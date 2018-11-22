@@ -2,28 +2,9 @@ import axios from 'axios';
 export const FETCH_POSTS = 'fetch_posts';
 export const CREATE_POSTS = 'create_posts';
 export const LOCAL_GET = 'local_get';
+const REQUEST_MADE = 'request_made';
+import fetch from 'cross-fetch'
 
-const ROOT_URL = 'http://reduxblog.herokuapp.com/api';
-const API_KEY = '?key=paperbash1432;'
-
-export function fetchPosts() {
-  const request = axios.get(
-    `${ROOT_URL}/posts${API_KEY}`,
-    {
-      timeout: 10000,
-      withCredentials: true,
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
-    }
-  );
-  // console.log(`req: ${request}`)
-  return {
-    type: FETCH_POSTS,
-    payload: request
-  };
-}
 
 // Create the XHR object.
 function createCORSRequest(method, url) {
@@ -47,7 +28,6 @@ function createCORSRequest(method, url) {
 function makeCorsRequest() {
   // This is a sample server that supports CORS.
   var url = 'http://localhost:9000';
-
   var xhr = createCORSRequest('GET', url);
   if (!xhr) {
     alert('CORS not supported');
@@ -58,6 +38,7 @@ function makeCorsRequest() {
   xhr.onload = function() {
     var text = xhr.responseText;
     console.log(`Load Text is: ${text}`);
+    returnAction(text)
   };
 
   xhr.onerror = function() {
@@ -70,18 +51,14 @@ function makeCorsRequest() {
 export function localGet() {
   makeCorsRequest();
   return {
-    type: LOCAL_GET,
-    payload: "hello"
+    type: REQUEST_MADE
   };
 };
 
-
-
-export function createPost(values) {
-  const request = axios.post(`${ROOT_URL}/posts${API_KEY}`, values);
-
+function returnAction(responseText) {
+  console.log("In return Action: " + responseText)
   return {
-    type: CREATE_POST,
-    payload: request
-  }
+    type: LOCAL_GET,
+    payload: responseText
+  };
 }

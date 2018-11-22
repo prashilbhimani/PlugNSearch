@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { fetchPosts, localGet } from "../actions";
+import { localGet } from "../actions";
 import { Link } from 'react-router-dom';
 import _ from 'lodash';
 import Checkbox from './checkbox';
@@ -9,7 +9,6 @@ class PostsIndex extends Component {
   componentDidMount() {
     // automatically called by react lifecycle.
     // its a one time thing.
-    this.props.fetchPosts();
     this.props.localGet();
   }
   renderPosts() {
@@ -35,6 +34,7 @@ class PostsIndex extends Component {
         <ul className="list-group">
           {this.renderPosts()}
         </ul>
+        {console.log(this.props.localget)}
         <Checkbox/>
       </div>
     );
@@ -42,7 +42,7 @@ class PostsIndex extends Component {
 }
 
 function mapStateToProps(state) {
-  return { posts: state.posts };
+  return { posts: state.posts, localget: state.localget };
 }
 
-export default connect(mapStateToProps, {fetchPosts: fetchPosts, localGet: localGet})(PostsIndex); // you can also use mapDispatchToProps
+export default connect(mapStateToProps, {localGet: localGet})(PostsIndex); // you can also use mapDispatchToProps

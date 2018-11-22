@@ -3,9 +3,7 @@ import _ from 'lodash';
 
 export default function (state = {}, action) {
   switch (action.type) {
-    case LOCAL_GET:
-      console.log(action.type);
-      console.log(action.payload);
+    case LOCAL_GET:            
       //console.log(action.payload.data); // [post1, post2 etc.]
       /*
           We need to convert [post1, post 2 etc]
