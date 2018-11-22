@@ -40,7 +40,7 @@ class MyHandler(BaseHTTPRequestHandler):
         # </body></html>
         # '''.format(path)
         # return bytes(content, 'UTF-8')
-        content = {'hello' : 5}
+        content = [{'hello' : 5}, {'hi': 27}]
         stringedjson = json.dumps(content)
         return bytes(stringedjson, 'UTF-8')
 

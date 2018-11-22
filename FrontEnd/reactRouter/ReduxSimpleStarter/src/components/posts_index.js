@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { fetchPosts, localGet } from "../actions";
 import { Link } from 'react-router-dom';
 import _ from 'lodash';
-import Demo from './demo';
+import Checkbox from './checkbox';
 
 class PostsIndex extends Component {
   componentDidMount() {
@@ -35,7 +35,7 @@ class PostsIndex extends Component {
         <ul className="list-group">
           {this.renderPosts()}
         </ul>
-        <Demo/>        
+        <Checkbox/>
       </div>
     );
   }

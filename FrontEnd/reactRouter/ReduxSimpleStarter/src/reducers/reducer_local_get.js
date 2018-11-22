@@ -23,7 +23,7 @@ export default function (state = {}, action) {
                      obj    what we wanna make a key
        */
       //return _.mapKeys(action.payload.data, 'id');
-      //return action.payload;
+      return action.payload;
     default:
       return state;
   }
