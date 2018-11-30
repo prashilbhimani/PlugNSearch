@@ -3,6 +3,8 @@ package AnalyticsGroup.AnalyticsArtifact;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.TreeSet;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -21,7 +23,7 @@ import net.minidev.json.JSONArray;
 
 public class GetTweetKeys {
 	public static String getType(Object tweetvalue) {
-		String type = "Is Nullable";
+		String type = null;
 		if(tweetvalue instanceof Long) {
 			type = "Long";
 		} else if(tweetvalue instanceof Double) {
@@ -45,12 +47,10 @@ public class GetTweetKeys {
 	}
 	
 	public static class GetTweetKeysMapper extends Mapper<Object, Text, Text, Text> {
-		public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-			//System.out.println("mapper input is: "+ value.toString());			
+		public void map(Object key, Text value, Context context) throws IOException, InterruptedException {					
 			try {
 				JSONObject tweetJson = new JSONObject(value.toString());
-				for(String tweetfield : JSONObject.getNames(tweetJson)) {
-					//System.out.println("field is: " + tweetfield);
+				for(String tweetfield : JSONObject.getNames(tweetJson)) {					
 					context.write(new Text(tweetfield), value);
 				}							
 			} catch(Exception e) {
@@ -62,21 +62,27 @@ public class GetTweetKeys {
 
 	public static class SumReducer extends Reducer<Text, Text, Text, Text> {		
 		public void reduce(Text term, Iterable<Text> ones, Context context) throws IOException, InterruptedException {			
-			int count = 0;
-			String type = "unknown";
+			int appearedCount = 0;
+			// String type = "unknown";			
+			TreeSet<String> typeSet = new TreeSet<String>();
 			
 			Iterator<Text> iterator = ones.iterator();			
 			while(iterator.hasNext()) {
 				Text tweet = iterator.next();
 				JSONObject tweetJson = new JSONObject(tweet.toString());
 				Object value = tweetJson.get(term.toString());
-				type = GetTweetKeys.getType(value);
-				count++;						
+				typeSet.add(GetTweetKeys.getType(value));
+				appearedCount++;						
 			}
 			JSONObject result = new JSONObject();
 			result.put("tweetKey", term.toString());
-			result.put("keyCount", count);
-			result.put("dataType", type);
+			result.put("keyCount", appearedCount);
+			JSONArray types = new JSONArray();
+			Object[] typedArr = typeSet.toArray();
+			for(int i=0; i < typedArr.length ; i++) {
+				types.add(typedArr[i]);
+			}
+			result.put("dataType", types);
 			context.write(new Text(result.toString()), new Text(""));
 
 		}
