@@ -22,33 +22,31 @@ import org.json.JSONObject;
 import net.minidev.json.JSONArray;
 
 public class GetTweetKeys {
-	public static String getType(Object tweetvalue) {
-		String type = "null";
-		if(tweetvalue == null) {
-			return type;
-		}
-		if(tweetvalue instanceof Long) {
-			type = "Long";
-		} else if(tweetvalue instanceof Double) {
-			type = "Double";
-		} else if(tweetvalue instanceof Float) {
-			type = "Float";
-		} else if(tweetvalue instanceof Integer) {
-			type = "Integer";
+	public static JSONObject getTypeAndValue(JSONObject tweetJson, String key) {
+		Object tweetvalue = tweetJson.get(key);
+		JSONObject result = new JSONObject();
+		result.put("type", JSONObject.NULL.toString());
+		result.put("value", JSONObject.NULL.toString());
+
+		if(tweetvalue instanceof Long || tweetvalue instanceof Double || tweetvalue instanceof Float || tweetvalue instanceof Integer) {
+			result.put("type", "Numeric");
+			result.put("value", String.valueOf(tweetJson.getBigInteger(key)));
 		} else if(tweetvalue instanceof Boolean) {
-			type = "Boolean";
-		} else if(tweetvalue instanceof String) {
-			type = "String";
-		} else if(tweetvalue instanceof Byte) {
-			type = "Byte";
+			result.put("type", "Boolean");
+			result.put("value", String.valueOf(tweetJson.getBoolean(key)));
+		} else if(tweetvalue instanceof String || tweetvalue instanceof Byte) {
+			result.put("type", "String");
+			result.put("value", tweetJson.getString(key));
 		} else if(tweetvalue instanceof JSONArray) {
-			type = "JSONArray";
+			result.put("type", "JSONArray");
+			result.put("value", tweetJson.getJSONArray(key).toString());
 		} else if(tweetvalue instanceof JSONObject) {
-			type = "JSONObject";
+			result.put("type", "JSONObject");
+			result.put("value", tweetJson.getJSONObject(key).toString());
 		} 
-		return type;
+		return result;
 	}
-	
+
 	public static class GetTweetKeysMapper extends Mapper<Object, Text, Text, Text> {
 		public void map(Object key, Text value, Context context) throws IOException, InterruptedException {					
 			try {
@@ -67,32 +65,45 @@ public class GetTweetKeys {
 		public void reduce(Text term, Iterable<Text> ones, Context context) throws IOException, InterruptedException {			
 			int appearedCount = 0;
 			int nullCount = 0;			
-			TreeSet<String> typeSet = new TreeSet<String>();
-			
+			TreeSet<String> typeSet = new TreeSet<String>();			
+			TreeSet<String> valueSet = new TreeSet<String>();
 			Iterator<Text> iterator = ones.iterator();			
+			
 			while(iterator.hasNext()) {
+				System.out.println("key is: " + term.toString());
 				Text tweet = iterator.next();
 				JSONObject tweetJson = new JSONObject(tweet.toString());
-				Object value = null;
+				JSONObject typeAndValue = GetTweetKeys.getTypeAndValue(tweetJson, term.toString());
 				
-				if(tweetJson.has(term.toString())) {
-					value = tweetJson.get(term.toString());
-				} else {
+				typeSet.add(typeAndValue.getString("type"));
+				if(typeAndValue.getString("type").equals("null")) {
 					nullCount++;
+				} else{
+					appearedCount++;	
 				}				
-				typeSet.add(GetTweetKeys.getType(value));
-				appearedCount++;						
+				valueSet.add(typeAndValue.getString("value"));
+
 			}
 			JSONObject result = new JSONObject();
 			result.put("tweetKey", term.toString());
 			result.put("appearedCount", appearedCount);
 			result.put("nullCount", nullCount);
+			
 			JSONArray types = new JSONArray();
 			Object[] typedArr = typeSet.toArray();
 			for(int i=0; i < typedArr.length ; i++) {
 				types.add(typedArr[i]);
 			}
 			result.put("dataType", types);
+			
+			JSONArray values = new JSONArray();
+			Object[] valueArr = valueSet.toArray();
+			for(int i=0; i < valueArr.length ; i++) {
+				values.add(valueArr[i]);
+			}
+			
+			result.put("NumberofUniqueValues", valueArr.length);
+			result.put("values", values);
 			context.write(new Text(result.toString()), new Text(""));
 
 		}
