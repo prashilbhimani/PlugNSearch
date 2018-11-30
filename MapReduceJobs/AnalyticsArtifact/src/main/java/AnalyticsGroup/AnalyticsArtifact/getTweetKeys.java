@@ -19,10 +19,12 @@ import org.json.JSONObject;
 public class getTweetKeys {
 
 	public static class GetTweetKeysMapper extends Mapper<Object, Text, Text, IntWritable> {
-		public void map(Object key, Text value, Context context) throws IOException, InterruptedException {				
+		public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
+			//System.out.println("mapper input is: "+ value.toString());			
 			try {
 				JSONObject tweetJson = new JSONObject(value.toString());
 				for(String tweetfield : JSONObject.getNames(tweetJson)) {
+					//System.out.println("field is: " + tweetfield);
 					context.write(new Text(tweetfield), new IntWritable(1));
 				}							
 			} catch(Exception e) {
@@ -36,7 +38,9 @@ public class getTweetKeys {
 		public void reduce(Text term, Iterable<IntWritable> ones, Context context) throws IOException, InterruptedException {			
 			int count = 0;
 			Iterator<IntWritable> iterator = ones.iterator();			
-			while(iterator.hasNext()) {								
+			while(iterator.hasNext()) {
+				IntWritable tweetKey = iterator.next();
+//				System.out.println("tweetKey is : " + tweetKey);
 				count++;						
 			}							
 			context.write(term, new IntWritable(count));
