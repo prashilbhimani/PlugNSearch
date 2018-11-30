@@ -23,7 +23,10 @@ import net.minidev.json.JSONArray;
 
 public class GetTweetKeys {
 	public static String getType(Object tweetvalue) {
-		String type = null;
+		String type = "null";
+		if(tweetvalue == null) {
+			return type;
+		}
 		if(tweetvalue instanceof Long) {
 			type = "Long";
 		} else if(tweetvalue instanceof Double) {
@@ -63,20 +66,27 @@ public class GetTweetKeys {
 	public static class SumReducer extends Reducer<Text, Text, Text, Text> {		
 		public void reduce(Text term, Iterable<Text> ones, Context context) throws IOException, InterruptedException {			
 			int appearedCount = 0;
-			// String type = "unknown";			
+			int nullCount = 0;			
 			TreeSet<String> typeSet = new TreeSet<String>();
 			
 			Iterator<Text> iterator = ones.iterator();			
 			while(iterator.hasNext()) {
 				Text tweet = iterator.next();
 				JSONObject tweetJson = new JSONObject(tweet.toString());
-				Object value = tweetJson.get(term.toString());
+				Object value = null;
+				
+				if(tweetJson.has(term.toString())) {
+					value = tweetJson.get(term.toString());
+				} else {
+					nullCount++;
+				}				
 				typeSet.add(GetTweetKeys.getType(value));
 				appearedCount++;						
 			}
 			JSONObject result = new JSONObject();
 			result.put("tweetKey", term.toString());
-			result.put("keyCount", appearedCount);
+			result.put("appearedCount", appearedCount);
+			result.put("nullCount", nullCount);
 			JSONArray types = new JSONArray();
 			Object[] typedArr = typeSet.toArray();
 			for(int i=0; i < typedArr.length ; i++) {
