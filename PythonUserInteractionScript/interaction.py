@@ -40,16 +40,10 @@ class UserPrompt:
                     appearedCount = analyticsjson['appearedCount']
                     dataType = analyticsjson['dataType']
                     nullCount = analyticsjson['nullCount']
-                    #print("The field: " + tweetKey +" appeared " + str(appearedCount) +" times in your dataset\nIt was null " + str(nullCount) +" times\nIt has  " +str(NumberofUniqueValues)+ " unique values\nIt has the following data values: " + str(dataType))
                     index = input("The field: " + tweetKey +" appeared " + str(appearedCount) +" times in your dataset\nIt was null " + str(nullCount) +" times\nIt has  " +str(NumberofUniqueValues)+ " unique values\nIt has the following data values: " + str(dataType) +" \nDo you want to index it? Y/N\n")
                     results[tweetKey] = index
                     print('*' * 50)
         return results
-
-
-
-
-
 
 
 inputdir = sys.argv[1]
