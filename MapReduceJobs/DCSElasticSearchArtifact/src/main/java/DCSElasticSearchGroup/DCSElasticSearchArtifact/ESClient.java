@@ -58,7 +58,7 @@ class ESAPI {
 		}
 		return null;
 	}
-	
+
 	public boolean getExistsResponse(String index, String type, String id ) throws IOException {
 		GetRequest getRequest = new GetRequest(index, type,  id);
 		getRequest.fetchSourceContext(new FetchSourceContext(false));
@@ -66,7 +66,7 @@ class ESAPI {
 		boolean exists = this.client.exists(getRequest, RequestOptions.DEFAULT);
 		return exists;
 	}
-	
+
 	public DeleteResponse getDeleteResponse(String index, String type, String id ) {
 		DeleteRequest deleteRequest = new DeleteRequest(index, type,  id);
 		try {
@@ -77,41 +77,42 @@ class ESAPI {
 		}
 		return null;
 	}
-	
+
 	public UpdateResponse getUpdateResponse(Map<String, Object> jsonMap, String index, String type, String id) {		
 		UpdateRequest request = new UpdateRequest(index, type,  id).doc(jsonMap);
 		try {
 			UpdateResponse updateResponse = client.update(request, RequestOptions.DEFAULT);
 			return updateResponse;
 		} catch (ElasticsearchException e) {
-		    if (e.status() == RestStatus.NOT_FOUND) {
-		    	// This is when the index or the type does not exist. Its a little misleading 		    	
-		        System.out.println("Handle the exception thrown because the document not exist .. Index or Type might not exist");
-		    }
+			if (e.status() == RestStatus.NOT_FOUND) {
+				// This is when the index or the type does not exist. Its a little misleading 		    	
+				System.out.println("Handle the exception thrown because the document not exist .. Index or Type might not exist");
+			}
 		} catch (IOException e) {			
 			e.printStackTrace();
 		}
 		return null;
-		
+
 	}
-	
-	public BulkResponse getBulkResponse(ArrayList<Map<String, Object>> jsonMaps, String index, String type, String idKey) {
+
+	public BulkResponse doBulkInsert(ArrayList<Map<String, Object>> jsonMaps, String index, String type, String idKey) {
 		BulkRequest request = new BulkRequest();
 		/*for(int i=0; i< jsonMaps.size(); i++){
 			String id = (idKey == null || idKey.length() == 0) ? Integer.toString((i+1)) : jsonMaps.get(i).get(idKey).toString();
 			request.add(new IndexRequest(index, type, id).source(XContentType.JSON,jsonMaps.get(i)));
 		}*/
-		request.add(new IndexRequest("posts", "doc", "1")  
-		        .source(XContentType.JSON,"field", "foo"));
-		request.add(new IndexRequest("posts", "doc", "2")  
-		        .source(XContentType.JSON,"field", "bar"));
-		request.add(new IndexRequest("posts", "doc", "3")  
-		        .source(XContentType.JSON,"field", "baz"));
-		try {
-			BulkResponse bulkResponse = client.bulk(request, RequestOptions.DEFAULT);
-			return bulkResponse;
-		} catch (IOException e) {			
-			e.printStackTrace();
+		if(jsonMaps != null) {
+			for(int i=0; i< jsonMaps.size(); i++) {
+				String id = (idKey == null || idKey.length() == 0) ? Integer.toString((i+1)) : jsonMaps.get(i).get(idKey).toString();
+				request.add(new IndexRequest(index, type, id)
+						.source(jsonMaps.get(i)));
+			}
+			try {
+				BulkResponse bulkResponse = client.bulk(request, RequestOptions.DEFAULT);
+				return bulkResponse;
+			} catch (IOException e) {			
+				e.printStackTrace();
+			}
 		}
 		return null;		
 	}
@@ -140,7 +141,7 @@ public class ESClient
 		jsonMap.put("message", message);
 		return jsonMap;
 	}
-	
+
 	public static void main( String[] args ) throws IOException
 	{
 		ESAPI esclient = new ESAPI("localhost", 9200);
@@ -156,24 +157,24 @@ public class ESClient
 		if(indexResponse != null) {
 			System.out.println(String.format("index: %s, type: %s, id: %s	", indexResponse.getIndex(), indexResponse.getType(), indexResponse.getId()));	
 		}
-		
+
 		// Get API
 		GetResponse getResponse = esclient.getResponse(index, type, id);
 		if(getResponse != null) {
 			System.out.println(String.format("index: %s, type: %s, id: %s	", getResponse.getIndex(), getResponse.getType(), getResponse.getId()));
 			if (getResponse.isExists()) {
-			    long version = getResponse.getVersion();
-			    String sourceAsString = getResponse.getSourceAsString();        
-			    Map<String, Object> sourceAsMap = getResponse.getSourceAsMap(); 
-			    byte[] sourceAsBytes = getResponse.getSourceAsBytes();
-			    System.out.println(String.format("version is %d\nsource is %s", version, sourceAsString));
+				long version = getResponse.getVersion();
+				String sourceAsString = getResponse.getSourceAsString();        
+				Map<String, Object> sourceAsMap = getResponse.getSourceAsMap(); 
+				byte[] sourceAsBytes = getResponse.getSourceAsBytes();
+				System.out.println(String.format("version is %d\nsource is %s", version, sourceAsString));
 			}
 		}
-		
+
 		// Exists API
 		boolean exists = esclient.getExistsResponse(index, type, id);
 		System.out.printf("Exists is : %b\n", exists);
-		
+
 		// Delete API
 		DeleteResponse deleteResponse = esclient.getDeleteResponse(index, type, id);
 		if(deleteResponse != null) {
@@ -183,13 +184,13 @@ public class ESClient
 			ReplicationResponse.ShardInfo shardInfo = deleteResponse.getShardInfo();
 			System.out.println(String.format("Failed is %d, Success is %d, Total is %d", shardInfo.getFailed(), shardInfo.getSuccessful(), shardInfo.getTotal()));
 			if (shardInfo.getFailed() > 0) {
-			    for (ReplicationResponse.ShardInfo.Failure failure :shardInfo.getFailures()) {
-			        String reason = failure.reason();
-			        System.out.println("reason for failure is: " + reason);
-			    }
+				for (ReplicationResponse.ShardInfo.Failure failure :shardInfo.getFailures()) {
+					String reason = failure.reason();
+					System.out.println("reason for failure is: " + reason);
+				}
 			}
 		}
-		
+
 		// Update API
 		esclient.getIndexResponse(jsonMap, index, type, id); // Deleted above, so doing an insert here
 		Map<String, Object> jsonMap2 = new HashMap<String, Object>();
@@ -200,7 +201,7 @@ public class ESClient
 		System.out.println(String.format("version is %d", version));
 		// TODO: Readup on the 4 things below
 		if (updateResponse.getResult() == DocWriteResponse.Result.CREATED) {
-		   System.out.println("We created it!"); 
+			System.out.println("We created it!"); 
 		} else if (updateResponse.getResult() == DocWriteResponse.Result.UPDATED) {
 			System.out.println("We updated it!");
 		} else if (updateResponse.getResult() == DocWriteResponse.Result.DELETED) {
@@ -210,49 +211,56 @@ public class ESClient
 		}
 		GetResult result = updateResponse.getGetResult();		
 		if (result != null && result.isExists()) {
-		    String sourceAsString = result.sourceAsString(); 
-		    Map<String, Object> sourceAsMap = result.sourceAsMap(); 
-		    byte[] sourceAsBytes = result.source();
-		    System.out.println(String.format("version is %d\nsource is %s", version, sourceAsString));		    
+			String sourceAsString = result.sourceAsString(); 
+			Map<String, Object> sourceAsMap = result.sourceAsMap(); 
+			byte[] sourceAsBytes = result.source();
+			System.out.println(String.format("version is %d\nsource is %s", version, sourceAsString));		    
 		} 
 		ReplicationResponse.ShardInfo shardInfo = updateResponse.getShardInfo();
 		if (shardInfo.getTotal() != shardInfo.getSuccessful()) {
-		    
+
 		}
 		if (shardInfo.getFailed() > 0) {
-		    for (ReplicationResponse.ShardInfo.Failure failure :shardInfo.getFailures()) {
-		        String reason = failure.reason();
-		        System.out.println("reason for failure is: " + reason);
-		    }
+			for (ReplicationResponse.ShardInfo.Failure failure :shardInfo.getFailures()) {
+				String reason = failure.reason();
+				System.out.println("reason for failure is: " + reason);
+			}
 		}
-		
-		
+
+
 		esclient.getUpdateResponse(createdummyInput("prashil"), index, "faill", id); // to check how we handle errors				
 		System.out.println("Done");
 
 		// BulkIndex API
-		BulkResponse bulkResponse = esclient.getBulkResponse(null, index, type, null);
-		for (BulkItemResponse bulkItemResponse : bulkResponse) { 
-		    DocWriteResponse itemResponse = bulkItemResponse.getResponse(); 
-
-		    if (bulkItemResponse.getOpType() == DocWriteRequest.OpType.INDEX
-		            || bulkItemResponse.getOpType() == DocWriteRequest.OpType.CREATE) { 
-		        IndexResponse indexResponse1 = (IndexResponse) itemResponse;
-
-		    } else if (bulkItemResponse.getOpType() == DocWriteRequest.OpType.UPDATE) { 
-		        UpdateResponse updateResponse1 = (UpdateResponse) itemResponse;
-
-		    } else if (bulkItemResponse.getOpType() == DocWriteRequest.OpType.DELETE) { 
-		        DeleteResponse deleteResponse1 = (DeleteResponse) itemResponse;
-		    }
+		ArrayList<Map<String, Object>> jsonMaps = new ArrayList<Map<String,Object>>();
+		for(int i=0; i< 5; i ++) {
+			jsonMaps.add(createdummyInput("varshini" + Integer.toString(i), new Date(), "This is Varshini Number " + i));
 		}
-		
+		BulkResponse bulkResponse = esclient.doBulkInsert(jsonMaps, index, type, "user");
+		for (BulkItemResponse bulkItemResponse : bulkResponse) { 
+			DocWriteResponse itemResponse = bulkItemResponse.getResponse(); 
+
+			if (bulkItemResponse.getOpType() == DocWriteRequest.OpType.INDEX
+					|| bulkItemResponse.getOpType() == DocWriteRequest.OpType.CREATE) { 
+				IndexResponse indexResponse1 = (IndexResponse) itemResponse;
+				System.out.println("Hello I inserted!");
+
+			} else if (bulkItemResponse.getOpType() == DocWriteRequest.OpType.UPDATE) { 
+				UpdateResponse updateResponse1 = (UpdateResponse) itemResponse;
+				System.out.println("Hello I updated");
+
+			} else if (bulkItemResponse.getOpType() == DocWriteRequest.OpType.DELETE) { 
+				DeleteResponse deleteResponse1 = (DeleteResponse) itemResponse;
+				System.out.println("Hello I deleted");
+			}
+		}
+
 		if (bulkResponse.hasFailures()) { 
 			for (BulkItemResponse bulkItemResponse : bulkResponse) {
-			    if (bulkItemResponse.isFailed()) { 
-			        BulkItemResponse.Failure failure = bulkItemResponse.getFailure(); 
+				if (bulkItemResponse.isFailed()) { 
+					BulkItemResponse.Failure failure = bulkItemResponse.getFailure(); 
 
-			    }
+				}
 			}
 		}
 
