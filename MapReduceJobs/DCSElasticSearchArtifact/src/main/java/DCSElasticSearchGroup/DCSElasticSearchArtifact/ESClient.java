@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.http.HttpHost;
+import org.elasticsearch.ElasticsearchException;
+import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequest;
@@ -18,8 +20,9 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.index.get.GetResult;
+import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
-import org.elasticsearch.action.*;
 
 class ESAPI {
 	private RestHighLevelClient client;
@@ -74,6 +77,11 @@ class ESAPI {
 		try {
 			UpdateResponse updateResponse = client.update(request, RequestOptions.DEFAULT);
 			return updateResponse;
+		} catch (ElasticsearchException e) {
+		    if (e.status() == RestStatus.NOT_FOUND) {
+		    	// This is when the index or the type does not exist. Its a little misleading 		    	
+		        System.out.println("Handle the exception thrown because the document not exist .. Index or Type might not exist");
+		    }
 		} catch (IOException e) {			
 			e.printStackTrace();
 		}
@@ -91,6 +99,21 @@ public class ESClient
 		jsonMap.put("message", "trying out Elasticsearch");
 		return jsonMap;
 	}
+	public static Map<String, Object> createdummyInput(String username) {
+		Map<String, Object> jsonMap = new HashMap<String, Object>();
+		jsonMap.put("user", username);
+		jsonMap.put("postDate", new Date());
+		jsonMap.put("message", "trying out Elasticsearch");
+		return jsonMap;
+	}
+	public static Map<String, Object> createdummyInput(String username, Date postDate, String message) {
+		Map<String, Object> jsonMap = new HashMap<String, Object>();
+		jsonMap.put("user", username);
+		jsonMap.put("postDate", postDate);
+		jsonMap.put("message", message);
+		return jsonMap;
+	}
+	
 	public static void main( String[] args ) throws IOException
 	{
 		ESAPI esclient = new ESAPI("localhost", 9200);
@@ -133,8 +156,7 @@ public class ESClient
 			ReplicationResponse.ShardInfo shardInfo = deleteResponse.getShardInfo();
 			System.out.println(String.format("Failed is %d, Success is %d, Total is %d", shardInfo.getFailed(), shardInfo.getSuccessful(), shardInfo.getTotal()));
 			if (shardInfo.getFailed() > 0) {
-			    for (ReplicationResponse.ShardInfo.Failure failure :
-			            shardInfo.getFailures()) {
+			    for (ReplicationResponse.ShardInfo.Failure failure :shardInfo.getFailures()) {
 			        String reason = failure.reason();
 			        System.out.println("reason for failure is: " + reason);
 			    }
@@ -159,7 +181,26 @@ public class ESClient
 		} else if (updateResponse.getResult() == DocWriteResponse.Result.NOOP) {
 			System.out.println("We Noop it!");
 		}
+		GetResult result = updateResponse.getGetResult();		
+		if (result != null && result.isExists()) {
+		    String sourceAsString = result.sourceAsString(); 
+		    Map<String, Object> sourceAsMap = result.sourceAsMap(); 
+		    byte[] sourceAsBytes = result.source();
+		    System.out.println(String.format("version is %d\nsource is %s", version, sourceAsString));		    
+		} 
+		ReplicationResponse.ShardInfo shardInfo = updateResponse.getShardInfo();
+		if (shardInfo.getTotal() != shardInfo.getSuccessful()) {
+		    
+		}
+		if (shardInfo.getFailed() > 0) {
+		    for (ReplicationResponse.ShardInfo.Failure failure :shardInfo.getFailures()) {
+		        String reason = failure.reason();
+		        System.out.println("reason for failure is: " + reason);
+		    }
+		}
 		
+		
+		esclient.getUpdateResponse(createdummyInput("prashil"), index, "faill", id); // to check how we handle errors				
 		System.out.println("Done");
 
 
