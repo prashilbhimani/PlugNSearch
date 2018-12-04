@@ -13,12 +13,13 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.support.replication.ReplicationResponse;
-import org.elasticsearch.action.support.replication.ReplicationResponse.ShardInfo;
+import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.index.warmer.ShardIndexWarmerService;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
+import org.elasticsearch.action.*;
 
 class ESAPI {
 	private RestHighLevelClient client;
@@ -66,6 +67,18 @@ class ESAPI {
 			e.printStackTrace();
 		}
 		return null;
+	}
+	
+	public UpdateResponse getUpdateResponse(Map<String, Object> jsonMap, String index, String type, String id) {		
+		UpdateRequest request = new UpdateRequest(index, type,  id).doc(jsonMap);
+		try {
+			UpdateResponse updateResponse = client.update(request, RequestOptions.DEFAULT);
+			return updateResponse;
+		} catch (IOException e) {			
+			e.printStackTrace();
+		}
+		return null;
+		
 	}
 }
 
@@ -128,7 +141,25 @@ public class ESClient
 			}
 		}
 		
-			
+		// Update API
+		esclient.getIndexResponse(jsonMap, index, type, id); // Deleted above, so doing an insert here
+		Map<String, Object> jsonMap2 = new HashMap<String, Object>();
+		jsonMap2.put("updated", new Date());
+		jsonMap2.put("reason", "daily update");
+		UpdateResponse updateResponse = esclient.getUpdateResponse(jsonMap2, index, type, id);
+		long version = updateResponse.getVersion();
+		System.out.println(String.format("version is %d", version));
+		// TODO: Readup on the 4 things below
+		if (updateResponse.getResult() == DocWriteResponse.Result.CREATED) {
+		   System.out.println("We created it!"); 
+		} else if (updateResponse.getResult() == DocWriteResponse.Result.UPDATED) {
+			System.out.println("We updated it!");
+		} else if (updateResponse.getResult() == DocWriteResponse.Result.DELETED) {
+			System.out.println("We deleted it!");
+		} else if (updateResponse.getResult() == DocWriteResponse.Result.NOOP) {
+			System.out.println("We Noop it!");
+		}
+		
 		System.out.println("Done");
 
 
