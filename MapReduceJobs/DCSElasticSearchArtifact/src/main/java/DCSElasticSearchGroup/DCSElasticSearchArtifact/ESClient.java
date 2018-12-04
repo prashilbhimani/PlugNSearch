@@ -6,13 +6,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.http.HttpHost;
+import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.support.replication.ReplicationResponse;
+import org.elasticsearch.action.support.replication.ReplicationResponse.ShardInfo;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.index.warmer.ShardIndexWarmerService;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 
 class ESAPI {
@@ -50,6 +55,17 @@ class ESAPI {
 		getRequest.storedFields("_none_"); // TODO: research what this is.
 		boolean exists = this.client.exists(getRequest, RequestOptions.DEFAULT);
 		return exists;
+	}
+	
+	public DeleteResponse getDeleteResponse(String index, String type, String id ) {
+		DeleteRequest deleteRequest = new DeleteRequest(index, type,  id);
+		try {
+			DeleteResponse deleteResponse = client.delete(deleteRequest, RequestOptions.DEFAULT);
+			return deleteResponse;
+		} catch (IOException e) {			
+			e.printStackTrace();
+		}
+		return null;
 	}
 }
 
@@ -95,8 +111,24 @@ public class ESClient
 		boolean exists = esclient.getExistsResponse(index, type, id);
 		System.out.printf("Exists is : %b\n", exists);
 		
-
-
+		// Delete API
+		DeleteResponse deleteResponse = esclient.getDeleteResponse(index, type, id);
+		if(deleteResponse != null) {
+			System.out.println(String.format("index: %s, type: %s, id: %s	", deleteResponse.getIndex(), deleteResponse.getType(), deleteResponse.getId()));
+			long version = deleteResponse.getVersion();
+			System.out.println(String.format("version is %d", version));
+			ReplicationResponse.ShardInfo shardInfo = deleteResponse.getShardInfo();
+			System.out.println(String.format("Failed is %d, Success is %d, Total is %d", shardInfo.getFailed(), shardInfo.getSuccessful(), shardInfo.getTotal()));
+			if (shardInfo.getFailed() > 0) {
+			    for (ReplicationResponse.ShardInfo.Failure failure :
+			            shardInfo.getFailures()) {
+			        String reason = failure.reason();
+			        System.out.println("reason for failure is: " + reason);
+			    }
+			}
+		}
+		
+			
 		System.out.println("Done");
 
 
