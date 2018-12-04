@@ -5,10 +5,11 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.apache.http.HttpHost;
 import org.elasticsearch.ElasticsearchException;
+import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.DocWriteResponse;
+import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -18,6 +19,7 @@ import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.action.support.replication.ReplicationResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
@@ -27,7 +29,6 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
-import org.elasticsearch.action.DocWriteRequest;
 
 class ESAPI {
 	private RestHighLevelClient client;
@@ -209,6 +210,25 @@ class ESAPI {
 		}
 		
 	}
+
+	public AcknowledgedResponse performMapping(String index, String type) {
+		PutMappingRequest request = new PutMappingRequest(index); 
+		request.type(type);
+		Map<String, Object> jsonMap = new HashMap<String, Object>();
+		Map<String, Object> message = new HashMap<String, Object>();
+		message.put("type", "text"); // this needs to change
+		Map<String, Object> properties = new HashMap<String, Object>();
+		properties.put("message", message);// this needs to change
+		jsonMap.put("properties", properties);
+		request.source(jsonMap);
+		try {
+			AcknowledgedResponse putMappingResponse = client.indices().putMapping(request, RequestOptions.DEFAULT);
+			return putMappingResponse;
+		} catch (IOException e) {			
+			e.printStackTrace();
+		}
+		return null;
+	}
 }
 
 public class ESClient 
@@ -280,6 +300,11 @@ public class ESClient
 		}
 		BulkResponse bulkResponse = esclient.doBulkInsert(jsonMaps, index, type, "user");
 		esclient.handleBulkResponse(bulkResponse);
+		
+		// Mapping API
+		AcknowledgedResponse putMappingResponse = esclient.performMapping(index, type);
+		System.out.println("put mapping is : " + putMappingResponse.isAcknowledged());
+		
 
 	}
 }
