@@ -24,7 +24,6 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
@@ -97,10 +96,6 @@ class ESAPI {
 
 	public BulkResponse doBulkInsert(ArrayList<Map<String, Object>> jsonMaps, String index, String type, String idKey) {
 		BulkRequest request = new BulkRequest();
-		/*for(int i=0; i< jsonMaps.size(); i++){
-			String id = (idKey == null || idKey.length() == 0) ? Integer.toString((i+1)) : jsonMaps.get(i).get(idKey).toString();
-			request.add(new IndexRequest(index, type, id).source(XContentType.JSON,jsonMaps.get(i)));
-		}*/
 		if(jsonMaps != null) {
 			for(int i=0; i< jsonMaps.size(); i++) {
 				String id = (idKey == null || idKey.length() == 0) ? Integer.toString((i+1)) : jsonMaps.get(i).get(idKey).toString();
@@ -115,6 +110,104 @@ class ESAPI {
 			}
 		}
 		return null;		
+	}
+
+	public void processIndexResponse(IndexResponse indexResponse) {
+		if(indexResponse != null) {
+			System.out.println(String.format("index: %s, type: %s, id: %s	", indexResponse.getIndex(), indexResponse.getType(), indexResponse.getId()));	
+		}		
+	}
+
+	public void processGetResponse(GetResponse getResponse) {
+		if(getResponse != null) {
+			System.out.println(String.format("index: %s, type: %s, id: %s	", getResponse.getIndex(), getResponse.getType(), getResponse.getId()));
+			if (getResponse.isExists()) {
+				long version = getResponse.getVersion();
+				String sourceAsString = getResponse.getSourceAsString();        
+				Map<String, Object> sourceAsMap = getResponse.getSourceAsMap(); 
+				byte[] sourceAsBytes = getResponse.getSourceAsBytes();
+				System.out.println(String.format("version is %d\nsource is %s", version, sourceAsString));
+			}
+		}		
+	}
+
+	public void processDeleteResponse(DeleteResponse deleteResponse) {
+		if(deleteResponse != null) {
+			System.out.println(String.format("index: %s, type: %s, id: %s	", deleteResponse.getIndex(), deleteResponse.getType(), deleteResponse.getId()));
+			long version = deleteResponse.getVersion();
+			System.out.println(String.format("version is %d", version));
+			ReplicationResponse.ShardInfo shardInfo = deleteResponse.getShardInfo();
+			System.out.println(String.format("Failed is %d, Success is %d, Total is %d", shardInfo.getFailed(), shardInfo.getSuccessful(), shardInfo.getTotal()));
+			if (shardInfo.getFailed() > 0) {
+				for (ReplicationResponse.ShardInfo.Failure failure :shardInfo.getFailures()) {
+					String reason = failure.reason();
+					System.out.println("reason for failure is: " + reason);
+				}
+			}
+		}
+		
+	}
+
+	public void processUpdateResponse(UpdateResponse updateResponse) {
+		long version = updateResponse.getVersion();
+		System.out.println(String.format("version is %d", version));
+		// TODO: Readup on the 4 things below
+		if (updateResponse.getResult() == DocWriteResponse.Result.CREATED) {
+			System.out.println("We created it!"); 
+		} else if (updateResponse.getResult() == DocWriteResponse.Result.UPDATED) {
+			System.out.println("We updated it!");
+		} else if (updateResponse.getResult() == DocWriteResponse.Result.DELETED) {
+			System.out.println("We deleted it!");
+		} else if (updateResponse.getResult() == DocWriteResponse.Result.NOOP) {
+			System.out.println("We Noop it!");
+		}
+		GetResult result = updateResponse.getGetResult();		
+		if (result != null && result.isExists()) {
+			String sourceAsString = result.sourceAsString(); 
+			Map<String, Object> sourceAsMap = result.sourceAsMap(); 
+			byte[] sourceAsBytes = result.source();
+			System.out.println(String.format("version is %d\nsource is %s", version, sourceAsString));		    
+		} 
+		ReplicationResponse.ShardInfo shardInfo = updateResponse.getShardInfo();
+		if (shardInfo.getTotal() != shardInfo.getSuccessful()) {
+
+		}
+		if (shardInfo.getFailed() > 0) {
+			for (ReplicationResponse.ShardInfo.Failure failure :shardInfo.getFailures()) {
+				String reason = failure.reason();
+				System.out.println("reason for failure is: " + reason);
+			}
+		}
+		
+	}
+
+	public void handleBulkResponse(BulkResponse bulkResponse) {
+		for (BulkItemResponse bulkItemResponse : bulkResponse) { 
+			DocWriteResponse itemResponse = bulkItemResponse.getResponse(); 
+			if (bulkItemResponse.getOpType() == DocWriteRequest.OpType.INDEX
+					|| bulkItemResponse.getOpType() == DocWriteRequest.OpType.CREATE) { 
+				IndexResponse indexResponse = (IndexResponse) itemResponse;
+				this.processIndexResponse(indexResponse);
+
+			} else if (bulkItemResponse.getOpType() == DocWriteRequest.OpType.UPDATE) { 
+				UpdateResponse updateResponse = (UpdateResponse) itemResponse;
+				this.processUpdateResponse(updateResponse);
+
+			} else if (bulkItemResponse.getOpType() == DocWriteRequest.OpType.DELETE) { 
+				DeleteResponse deleteResponse = (DeleteResponse) itemResponse;
+				this.processDeleteResponse(deleteResponse);				
+			}
+		}
+		
+		if (bulkResponse.hasFailures()) { 
+			for (BulkItemResponse bulkItemResponse : bulkResponse) {
+				if (bulkItemResponse.isFailed()) { 
+					BulkItemResponse.Failure failure = bulkItemResponse.getFailure(); 
+
+				}
+			}
+		}
+		
 	}
 }
 
@@ -154,22 +247,12 @@ public class ESClient
 
 		// Index API
 		IndexResponse indexResponse = esclient.getIndexResponse(jsonMap, index, type, id);
-		if(indexResponse != null) {
-			System.out.println(String.format("index: %s, type: %s, id: %s	", indexResponse.getIndex(), indexResponse.getType(), indexResponse.getId()));	
-		}
+		esclient.processIndexResponse(indexResponse);
+
 
 		// Get API
 		GetResponse getResponse = esclient.getResponse(index, type, id);
-		if(getResponse != null) {
-			System.out.println(String.format("index: %s, type: %s, id: %s	", getResponse.getIndex(), getResponse.getType(), getResponse.getId()));
-			if (getResponse.isExists()) {
-				long version = getResponse.getVersion();
-				String sourceAsString = getResponse.getSourceAsString();        
-				Map<String, Object> sourceAsMap = getResponse.getSourceAsMap(); 
-				byte[] sourceAsBytes = getResponse.getSourceAsBytes();
-				System.out.println(String.format("version is %d\nsource is %s", version, sourceAsString));
-			}
-		}
+		esclient.processGetResponse(getResponse);
 
 		// Exists API
 		boolean exists = esclient.getExistsResponse(index, type, id);
@@ -177,19 +260,7 @@ public class ESClient
 
 		// Delete API
 		DeleteResponse deleteResponse = esclient.getDeleteResponse(index, type, id);
-		if(deleteResponse != null) {
-			System.out.println(String.format("index: %s, type: %s, id: %s	", deleteResponse.getIndex(), deleteResponse.getType(), deleteResponse.getId()));
-			long version = deleteResponse.getVersion();
-			System.out.println(String.format("version is %d", version));
-			ReplicationResponse.ShardInfo shardInfo = deleteResponse.getShardInfo();
-			System.out.println(String.format("Failed is %d, Success is %d, Total is %d", shardInfo.getFailed(), shardInfo.getSuccessful(), shardInfo.getTotal()));
-			if (shardInfo.getFailed() > 0) {
-				for (ReplicationResponse.ShardInfo.Failure failure :shardInfo.getFailures()) {
-					String reason = failure.reason();
-					System.out.println("reason for failure is: " + reason);
-				}
-			}
-		}
+		esclient.processDeleteResponse(deleteResponse);
 
 		// Update API
 		esclient.getIndexResponse(jsonMap, index, type, id); // Deleted above, so doing an insert here
@@ -197,74 +268,18 @@ public class ESClient
 		jsonMap2.put("updated", new Date());
 		jsonMap2.put("reason", "daily update");
 		UpdateResponse updateResponse = esclient.getUpdateResponse(jsonMap2, index, type, id);
-		long version = updateResponse.getVersion();
-		System.out.println(String.format("version is %d", version));
-		// TODO: Readup on the 4 things below
-		if (updateResponse.getResult() == DocWriteResponse.Result.CREATED) {
-			System.out.println("We created it!"); 
-		} else if (updateResponse.getResult() == DocWriteResponse.Result.UPDATED) {
-			System.out.println("We updated it!");
-		} else if (updateResponse.getResult() == DocWriteResponse.Result.DELETED) {
-			System.out.println("We deleted it!");
-		} else if (updateResponse.getResult() == DocWriteResponse.Result.NOOP) {
-			System.out.println("We Noop it!");
-		}
-		GetResult result = updateResponse.getGetResult();		
-		if (result != null && result.isExists()) {
-			String sourceAsString = result.sourceAsString(); 
-			Map<String, Object> sourceAsMap = result.sourceAsMap(); 
-			byte[] sourceAsBytes = result.source();
-			System.out.println(String.format("version is %d\nsource is %s", version, sourceAsString));		    
-		} 
-		ReplicationResponse.ShardInfo shardInfo = updateResponse.getShardInfo();
-		if (shardInfo.getTotal() != shardInfo.getSuccessful()) {
-
-		}
-		if (shardInfo.getFailed() > 0) {
-			for (ReplicationResponse.ShardInfo.Failure failure :shardInfo.getFailures()) {
-				String reason = failure.reason();
-				System.out.println("reason for failure is: " + reason);
-			}
-		}
-
-
+		esclient.processUpdateResponse(updateResponse);
+		// Test Update Failure
 		esclient.getUpdateResponse(createdummyInput("prashil"), index, "faill", id); // to check how we handle errors				
 		System.out.println("Done");
 
-		// BulkIndex API
+		// Bulk insert API
 		ArrayList<Map<String, Object>> jsonMaps = new ArrayList<Map<String,Object>>();
 		for(int i=0; i< 5; i ++) {
-			jsonMaps.add(createdummyInput("varshini" + Integer.toString(i), new Date(), "This is Varshini Number " + i));
+			jsonMaps.add(createdummyInput("User" + Integer.toString(i), new Date(), "This is User Number " + i));
 		}
 		BulkResponse bulkResponse = esclient.doBulkInsert(jsonMaps, index, type, "user");
-		for (BulkItemResponse bulkItemResponse : bulkResponse) { 
-			DocWriteResponse itemResponse = bulkItemResponse.getResponse(); 
-
-			if (bulkItemResponse.getOpType() == DocWriteRequest.OpType.INDEX
-					|| bulkItemResponse.getOpType() == DocWriteRequest.OpType.CREATE) { 
-				IndexResponse indexResponse1 = (IndexResponse) itemResponse;
-				System.out.println("Hello I inserted!");
-
-			} else if (bulkItemResponse.getOpType() == DocWriteRequest.OpType.UPDATE) { 
-				UpdateResponse updateResponse1 = (UpdateResponse) itemResponse;
-				System.out.println("Hello I updated");
-
-			} else if (bulkItemResponse.getOpType() == DocWriteRequest.OpType.DELETE) { 
-				DeleteResponse deleteResponse1 = (DeleteResponse) itemResponse;
-				System.out.println("Hello I deleted");
-			}
-		}
-
-		if (bulkResponse.hasFailures()) { 
-			for (BulkItemResponse bulkItemResponse : bulkResponse) {
-				if (bulkItemResponse.isFailed()) { 
-					BulkItemResponse.Failure failure = bulkItemResponse.getFailure(); 
-
-				}
-			}
-		}
-
-
+		esclient.handleBulkResponse(bulkResponse);
 
 	}
 }
