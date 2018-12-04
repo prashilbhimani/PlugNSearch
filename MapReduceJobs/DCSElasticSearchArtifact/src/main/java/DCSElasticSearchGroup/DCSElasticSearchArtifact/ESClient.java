@@ -211,14 +211,12 @@ class ESAPI {
 		
 	}
 
-	public AcknowledgedResponse performMapping(String index, String type) {
+	public AcknowledgedResponse performMapping(String index, String type, Map<String, Object> mapping, String key) {
 		PutMappingRequest request = new PutMappingRequest(index); 
 		request.type(type);
 		Map<String, Object> jsonMap = new HashMap<String, Object>();
-		Map<String, Object> message = new HashMap<String, Object>();
-		message.put("type", "text"); // this needs to change
 		Map<String, Object> properties = new HashMap<String, Object>();
-		properties.put("message", message);// this needs to change
+		properties.put(key, mapping);// this needs to change
 		jsonMap.put("properties", properties);
 		request.source(jsonMap);
 		try {
@@ -302,7 +300,9 @@ public class ESClient
 		esclient.handleBulkResponse(bulkResponse);
 		
 		// Mapping API
-		AcknowledgedResponse putMappingResponse = esclient.performMapping(index, type);
+		Map<String, Object> message = new HashMap<String, Object>();
+		message.put("type", "text"); 
+		AcknowledgedResponse putMappingResponse = esclient.performMapping(index, type, message, "message");
 		System.out.println("put mapping is : " + putMappingResponse.isAcknowledged());
 		
 
