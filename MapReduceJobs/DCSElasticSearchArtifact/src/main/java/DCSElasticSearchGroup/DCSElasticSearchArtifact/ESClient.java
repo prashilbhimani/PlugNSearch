@@ -13,6 +13,7 @@ import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 
 class ESAPI {
 	private RestHighLevelClient client;
@@ -41,6 +42,14 @@ class ESAPI {
 			e.printStackTrace();
 		}
 		return null;
+	}
+	
+	public boolean getExistsResponse(String index, String type, String id ) throws IOException {
+		GetRequest getRequest = new GetRequest(index, type,  id);
+		getRequest.fetchSourceContext(new FetchSourceContext(false));
+		getRequest.storedFields("_none_"); // TODO: research what this is.
+		boolean exists = this.client.exists(getRequest, RequestOptions.DEFAULT);
+		return exists;
 	}
 }
 
@@ -81,6 +90,11 @@ public class ESClient
 			    System.out.println(String.format("version is %d\nsource is %s", version, sourceAsString));
 			}
 		}
+		
+		// Exists API
+		boolean exists = esclient.getExistsResponse(index, type, id);
+		System.out.printf("Exists is : %b\n", exists);
+		
 
 
 		System.out.println("Done");
