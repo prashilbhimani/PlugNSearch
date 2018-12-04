@@ -30,7 +30,7 @@ import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 
-class ESAPI {
+public class ESAPI {
 	private RestHighLevelClient client;
 
 	public ESAPI(String host, int port) {
@@ -146,7 +146,7 @@ class ESAPI {
 				}
 			}
 		}
-		
+
 	}
 
 	public void processUpdateResponse(UpdateResponse updateResponse) {
@@ -179,7 +179,7 @@ class ESAPI {
 				System.out.println("reason for failure is: " + reason);
 			}
 		}
-		
+
 	}
 
 	public void handleBulkResponse(BulkResponse bulkResponse) {
@@ -199,7 +199,7 @@ class ESAPI {
 				this.processDeleteResponse(deleteResponse);				
 			}
 		}
-		
+
 		if (bulkResponse.hasFailures()) { 
 			for (BulkItemResponse bulkItemResponse : bulkResponse) {
 				if (bulkItemResponse.isFailed()) { 
@@ -208,15 +208,15 @@ class ESAPI {
 				}
 			}
 		}
-		
+
 	}
 
-	public AcknowledgedResponse performMapping(String index, String type, Map<String, Object> mapping, String key) {
+	public AcknowledgedResponse performMapping(String index, String type, Map<String, Object> mapping, String mappingKey) {
 		PutMappingRequest request = new PutMappingRequest(index); 
 		request.type(type);
 		Map<String, Object> jsonMap = new HashMap<String, Object>();
 		Map<String, Object> properties = new HashMap<String, Object>();
-		properties.put(key, mapping);// this needs to change
+		properties.put(mappingKey, mapping);
 		jsonMap.put("properties", properties);
 		request.source(jsonMap);
 		try {
@@ -227,10 +227,7 @@ class ESAPI {
 		}
 		return null;
 	}
-}
 
-public class ESClient 
-{
 	public static Map<String, Object> createdummyInput() {
 		Map<String, Object> jsonMap = new HashMap<String, Object>();
 		jsonMap.put("user", "sharan");
@@ -298,13 +295,13 @@ public class ESClient
 		}
 		BulkResponse bulkResponse = esclient.doBulkInsert(jsonMaps, index, type, "user");
 		esclient.handleBulkResponse(bulkResponse);
-		
+
 		// Mapping API
 		Map<String, Object> message = new HashMap<String, Object>();
 		message.put("type", "text"); 
 		AcknowledgedResponse putMappingResponse = esclient.performMapping(index, type, message, "message");
 		System.out.println("put mapping is : " + putMappingResponse.isAcknowledged());
-		
+
 
 	}
 }
