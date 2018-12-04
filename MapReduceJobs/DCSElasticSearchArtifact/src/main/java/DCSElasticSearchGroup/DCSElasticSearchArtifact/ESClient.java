@@ -1,6 +1,7 @@
 package DCSElasticSearchGroup.DCSElasticSearchArtifact;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -8,6 +9,9 @@ import java.util.Map;
 import org.apache.http.HttpHost;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.DocWriteResponse;
+import org.elasticsearch.action.bulk.BulkItemResponse;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequest;
@@ -20,9 +24,11 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
+import org.elasticsearch.action.DocWriteRequest;
 
 class ESAPI {
 	private RestHighLevelClient client;
@@ -87,6 +93,27 @@ class ESAPI {
 		}
 		return null;
 		
+	}
+	
+	public BulkResponse getBulkResponse(ArrayList<Map<String, Object>> jsonMaps, String index, String type, String idKey) {
+		BulkRequest request = new BulkRequest();
+		/*for(int i=0; i< jsonMaps.size(); i++){
+			String id = (idKey == null || idKey.length() == 0) ? Integer.toString((i+1)) : jsonMaps.get(i).get(idKey).toString();
+			request.add(new IndexRequest(index, type, id).source(XContentType.JSON,jsonMaps.get(i)));
+		}*/
+		request.add(new IndexRequest("posts", "doc", "1")  
+		        .source(XContentType.JSON,"field", "foo"));
+		request.add(new IndexRequest("posts", "doc", "2")  
+		        .source(XContentType.JSON,"field", "bar"));
+		request.add(new IndexRequest("posts", "doc", "3")  
+		        .source(XContentType.JSON,"field", "baz"));
+		try {
+			BulkResponse bulkResponse = client.bulk(request, RequestOptions.DEFAULT);
+			return bulkResponse;
+		} catch (IOException e) {			
+			e.printStackTrace();
+		}
+		return null;		
 	}
 }
 
@@ -203,6 +230,31 @@ public class ESClient
 		esclient.getUpdateResponse(createdummyInput("prashil"), index, "faill", id); // to check how we handle errors				
 		System.out.println("Done");
 
+		// BulkIndex API
+		BulkResponse bulkResponse = esclient.getBulkResponse(null, index, type, null);
+		for (BulkItemResponse bulkItemResponse : bulkResponse) { 
+		    DocWriteResponse itemResponse = bulkItemResponse.getResponse(); 
+
+		    if (bulkItemResponse.getOpType() == DocWriteRequest.OpType.INDEX
+		            || bulkItemResponse.getOpType() == DocWriteRequest.OpType.CREATE) { 
+		        IndexResponse indexResponse1 = (IndexResponse) itemResponse;
+
+		    } else if (bulkItemResponse.getOpType() == DocWriteRequest.OpType.UPDATE) { 
+		        UpdateResponse updateResponse1 = (UpdateResponse) itemResponse;
+
+		    } else if (bulkItemResponse.getOpType() == DocWriteRequest.OpType.DELETE) { 
+		        DeleteResponse deleteResponse1 = (DeleteResponse) itemResponse;
+		    }
+		}
+		
+		if (bulkResponse.hasFailures()) { 
+			for (BulkItemResponse bulkItemResponse : bulkResponse) {
+			    if (bulkItemResponse.isFailed()) { 
+			        BulkItemResponse.Failure failure = bulkItemResponse.getFailure(); 
+
+			    }
+			}
+		}
 
 
 
