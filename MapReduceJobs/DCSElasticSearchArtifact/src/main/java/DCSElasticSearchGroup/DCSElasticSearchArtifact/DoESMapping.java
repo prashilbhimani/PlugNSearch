@@ -31,17 +31,23 @@ public class DoESMapping {
 	}
 	public static void main(String args[]) {
 		System.out.println("Starting .....");
-
-		if(args.length != 1) {
+		// userinteractionoutputdir/index.txt localhost port testmapping _doc
+		if(args.length != 5) {
 			System.err.println("Not enough Args");
 		}
 
-		ArrayList<String> lines = readlines(args[0]);		
+		String inputPath = args[0];
+		String ipAdd = args[1];
+		int port = Integer.parseInt(args[2]);
+		String index = args[3];
+		String type = args[4];
+		
+		ArrayList<String> lines = readlines(inputPath);		
 
 
-		ESAPI esclient = new ESAPI("localhost", 9200);
-		String index = "testmapping";
-		String type = "_doc";
+		ESAPI esclient = new ESAPI(ipAdd, port);
+		
+		
 		Map<String, Object> message = getIndexData(lines);
 		System.out.println(message);
 		try {		
