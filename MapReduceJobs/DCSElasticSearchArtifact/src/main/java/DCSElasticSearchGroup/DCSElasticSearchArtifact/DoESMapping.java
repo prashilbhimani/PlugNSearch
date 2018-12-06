@@ -41,7 +41,7 @@ public class DoESMapping {
 
 		ESAPI esclient = new ESAPI("localhost", 9200);
 		String index = "testmapping";
-		String type = "doc";
+		String type = "_doc";
 		Map<String, Object> message = getIndexData(lines);
 		System.out.println(message);
 		try {		
@@ -61,14 +61,21 @@ public class DoESMapping {
 		for(String line: lines) {
 			Map<String, Object> internalMap = new HashMap<String, Object>();
 			String[] pairs = line.split("\t");
-			if(pairs.length == 2) {
+			if(pairs.length == 3) {
 				String key = pairs[0].trim();
 				String indexBoolean = pairs[1].trim().toLowerCase();
+				String type = pairs[2].trim().toLowerCase();								
+				internalMap.put("type", type);
+				if(type.equals("object")) {
+					if(indexBoolean.equals("n")) {
+						internalMap.put("enabled", false);
+					} 
+				} else {
+					if(indexBoolean.equals("n")) {						
+						internalMap.put("index", false);				
+					}		
+				}
 				mapping.put(key,internalMap);
-				internalMap.put("type", "text"); // This needs to change
-				if(indexBoolean.equals("n")) {
-					internalMap.put("index", false);				
-				}				
 			}
 		}
 		return mapping;
