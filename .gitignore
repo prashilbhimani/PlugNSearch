@@ -1,0 +1,9 @@
+MapReduceJobs/AnalyticsArtifact/outputdir/
+*.iml
+*.xml
+PythonUserInteractionScript.zip
+MapReduceJobs/DCSElasticSearchArtifact/.classpath
+MapReduceJobs/DCSElasticSearchArtifact/.project
+MapReduceJobs/DCSElasticSearchArtifact/.settings/org.eclipse.core.resources.prefs
+MapReduceJobs/DCSElasticSearchArtifact/.settings/org.eclipse.jdt.core.prefs
+MapReduceJobs/DCSElasticSearchArtifact/.settings/org.eclipse.m2e.core.prefs
