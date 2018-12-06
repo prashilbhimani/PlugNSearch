@@ -1,4 +1,4 @@
-package AnalyticsGroup.AnalyticsArtifact;
+package DCSElasticSearchGroup.DCSElasticSearchArtifact;
 
 
 import java.io.IOException;
