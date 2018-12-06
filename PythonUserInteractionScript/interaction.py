@@ -27,7 +27,14 @@ class UserPrompt:
         self.inputpath = inputpath
         self.results = {}
     def getFinalDataType(self, dataTypeArr):
-        if len(dataTypeArr):
+        if len(dataTypeArr) == 1 :
+            if dataTypeArr[0] == "null":
+                return "text"
+            return dataTypeArr[0]
+        else:
+            return "text"
+
+
     def prompt(self):
         results = {}
         with open(self.inputpath, "r") as infile:
@@ -42,8 +49,8 @@ class UserPrompt:
                     dataType = analyticsjson['dataType']
                     finalDataType = self.getFinalDataType(dataType)
                     nullCount = analyticsjson['nullCount']
-                    index = input("The field: " + tweetKey +" appeared " + str(appearedCount) +" times in your dataset\nIt was null " + str(nullCount) +" times\nIt has  " +str(NumberofUniqueValues)+ " unique values\nIt has the following data values: " + str(dataType) +" \nDo you want to index it? Y/N\n")
-                    results[tweetKey] = index
+                    index = input("The field: " + tweetKey +" appeared " + str(appearedCount) +" times in your dataset\nIt was null " + str(nullCount) +" times\nIt has  " +str(NumberofUniqueValues)+ " unique values\nIt has the following data values: " + str(finalDataType) +" \nDo you want to index it? Y/N\n")
+                    results[tweetKey] = index + "\t" + finalDataType
                     print('*' * 50)
         return results
 

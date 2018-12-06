@@ -1,72 +1,36 @@
-contributors	Y
-coordinates	N
-created_at	Y
-display_text_range	N
-entities	Y
-extended_entities	N
-extended_tweet	Y
-favorite_count	N
-favorited	Y
-filter_level	N
-geo	Y
-id	N
-id_str	Y
-in_reply_to_screen_name	N
-in_reply_to_status_id	Y
-in_reply_to_status_id_str	N
-in_reply_to_user_id	Y
-in_reply_to_user_id_str	N
-is_quote_status	Y
-lang	Y
-matching_rules	Y
-place	Y
-possibly_sensitive	Y
-quote_count	N
-quoted_status	Y
-quoted_status_id	N
-quoted_status_id_str	Y
-quoted_status_permalink	N
-reply_count	N
-retweet_count	N
-retweeted	Y
-retweeted_status	N
-source	Y
-text	N
-truncated	Y
-user	N
-contributors	Y
-coordinates	N
-created_at	Y
-display_text_range	N
-entities	Y
-extended_entities	N
-extended_tweet	Y
-favorite_count	N
-favorited	Y
-filter_level	N
-geo	Y
-id	N
-id_str	Y
-in_reply_to_screen_name	N
-in_reply_to_status_id	Y
-in_reply_to_status_id_str	N
-in_reply_to_user_id	Y
-in_reply_to_user_id_str	N
-is_quote_status	Y
-lang	N
-matching_rules	Y
-place	N
-possibly_sensitive	Y
-quote_count	N
-quoted_status	Y
-quoted_status_id	N
-quoted_status_id_str	Y
-quoted_status_permalink	N
-reply_count	Y
-retweet_count	N
-retweeted	Y
-retweeted_status	N
-source	Y
-text	N
-truncated	Y
-user	N
+contributors	Y	text
+coordinates	N	text
+created_at	Y	text
+display_text_range	N	text
+entities	Y	object
+extended_entities	N	object
+extended_tweet	Y	object
+favorite_count	N	long
+favorited	Y	boolean
+filter_level	N	text
+geo	Y	text
+id	N	long
+id_str	Y	text
+in_reply_to_screen_name	N	text
+in_reply_to_status_id	Y	text
+in_reply_to_status_id_str	N	text
+in_reply_to_user_id	Y	text
+in_reply_to_user_id_str	N	text
+is_quote_status	Y	boolean
+lang	N	text
+matching_rules	Y	text
+place	N	text
+possibly_sensitive	Y	boolean
+quote_count	N	long
+quoted_status	Y	object
+quoted_status_id	N	long
+quoted_status_id_str	Y	text
+quoted_status_permalink	N	object
+reply_count	Y	long
+retweet_count	N	long
+retweeted	Y	boolean
+retweeted_status	N	object
+source	Y	text
+text	N	text
+truncated	Y	boolean
+user	N	object
