@@ -65,7 +65,7 @@ public class DoESMapping {
 				String key = pairs[0].trim();
 				String indexBoolean = pairs[1].trim().toLowerCase();
 				mapping.put(key,internalMap);
-				internalMap.put("type", "text");
+				internalMap.put("type", "text"); // This needs to change
 				if(indexBoolean.equals("n")) {
 					internalMap.put("index", false);				
 				}				

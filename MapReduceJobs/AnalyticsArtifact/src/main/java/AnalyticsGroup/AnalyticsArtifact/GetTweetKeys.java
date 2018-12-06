@@ -29,19 +29,19 @@ public class GetTweetKeys {
 		result.put("value", JSONObject.NULL.toString());
 
 		if(tweetvalue instanceof Long || tweetvalue instanceof Double || tweetvalue instanceof Float || tweetvalue instanceof Integer) {
-			result.put("type", "Numeric");
+			result.put("type", "long");
 			result.put("value", String.valueOf(tweetJson.getBigInteger(key)));
 		} else if(tweetvalue instanceof Boolean) {
-			result.put("type", "Boolean");
+			result.put("type", "boolean");
 			result.put("value", String.valueOf(tweetJson.getBoolean(key)));
 		} else if(tweetvalue instanceof String || tweetvalue instanceof Byte) {
-			result.put("type", "String");
+			result.put("type", "text");
 			result.put("value", tweetJson.getString(key));
 		} else if(tweetvalue instanceof JSONArray) {
-			result.put("type", "JSONArray");
+			result.put("type", "nested");
 			result.put("value", tweetJson.getJSONArray(key).toString());
 		} else if(tweetvalue instanceof JSONObject) {
-			result.put("type", "JSONObject");
+			result.put("type", "object");
 			result.put("value", tweetJson.getJSONObject(key).toString());
 		} 
 		return result;
