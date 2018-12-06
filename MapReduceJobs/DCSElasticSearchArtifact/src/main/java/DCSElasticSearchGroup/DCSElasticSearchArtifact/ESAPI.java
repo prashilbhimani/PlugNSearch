@@ -5,10 +5,13 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.apache.http.HttpHost;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.DocWriteResponse;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -36,7 +39,18 @@ public class ESAPI {
 	public ESAPI(String host, int port) {
 		this.client = new RestHighLevelClient(RestClient.builder(new HttpHost(host, port, "http"),new HttpHost("host", port+1, "http")));
 	}
-
+	public CreateIndexResponse createIndex(String index) {
+		CreateIndexRequest request = new CreateIndexRequest(index);
+		CreateIndexResponse createIndexResponse;
+		try {
+			createIndexResponse = client.indices().create(request, RequestOptions.DEFAULT);
+			return createIndexResponse;
+		} catch (IOException e) {			
+			e.printStackTrace();
+			return null;
+		}
+		
+	}
 	public IndexResponse getIndexResponse(Map<String, Object> jsonMap, String index, String type, String id) {
 		IndexRequest indexRequest = new IndexRequest(index, type, id).source(jsonMap);			 
 		try {
@@ -211,12 +225,14 @@ public class ESAPI {
 
 	}
 
-	public AcknowledgedResponse performMapping(String index, String type, Map<String, Object> mapping, String mappingKey) {
+	public AcknowledgedResponse performMapping(String index, String type, Map<String, Object> mapping) {
 		PutMappingRequest request = new PutMappingRequest(index); 
 		request.type(type);
 		Map<String, Object> jsonMap = new HashMap<String, Object>();
 		Map<String, Object> properties = new HashMap<String, Object>();
-		properties.put(mappingKey, mapping);
+		for(String key : mapping.keySet()) {
+			properties.put(key, mapping.get(key));
+		}		
 		jsonMap.put("properties", properties);
 		request.source(jsonMap);
 		try {
@@ -299,7 +315,9 @@ public class ESAPI {
 		// Mapping API
 		Map<String, Object> message = new HashMap<String, Object>();
 		message.put("type", "text"); 
-		AcknowledgedResponse putMappingResponse = esclient.performMapping(index, type, message, "message");
+		Map<String, Object> outerMap = new HashMap<String, Object>();
+		outerMap.put("outerTweetKey", message);
+		AcknowledgedResponse putMappingResponse = esclient.performMapping(index, type, message);
 		System.out.println("put mapping is : " + putMappingResponse.isAcknowledged());
 
 
