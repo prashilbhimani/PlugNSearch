@@ -1,4 +1,5 @@
 #Install Java
+sudo apt-get update
 sudo apt-get install -y openjdk-8-jre
 export JAVA_HOME='/usr/lib/jvm/java-1.8.0-openjdk-amd64'
 

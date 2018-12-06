@@ -1,6 +1,6 @@
 ## Will write a script that will do all that we discussed
 ## $1 = The data
-## $2 = Number of Kafka nodes
+## $2 = Custom unzipper
 
 
 ## Initial Setup of variables
@@ -43,8 +43,31 @@ gcloud compute  scp --zone "us-east1-b" torrent.sh torrentgetter:~/
 gcloud compute  scp --zone "us-east1-b" data.torrent torrentgetter:~/
 gcloud compute --project "datacenterscaleproject" ssh --zone "us-east1-b" "torrentgetter" --command "chmod +x torrent.sh && ./torrent.sh"
 
-# Step 5: Recursive unzip
+# Step 5: Custom unzip
+
 
 # Step 6: Set up kafka
+sudo chmod 755 kafka/kafka_main.sh
+./kafka/kafka_main.sh 1
+for i in `seq 1 $1`;do
+	kafka+=($(gcloud compute instances describe "kafka$i" |sed -n "/networkIP\:\ /s/networkIP\:\ //p"))
+done
+kafka_ips="$(IFS=, ; echo "${kafka[*]}")"
 
-# Step 7 : Send to kafka
+
+# Setp 7 : Set up storm
+sudo chmod 755 storm/create.sh
+./storm/create.sh 1
+
+read -p "Press enter when the file downloads is complete"
+
+# Step 8 : Submit topology
+
+# Step 9 : Copy files
+gcloud compute --project "datacenterscaleproject" ssh --zone "us-east1-b" "torrentgetter" --command "mkdir data && sudo cp -r /var/lib/transmission-daemon/Downloads/ data/"
+gcloud compute  scp --zone "us-east1-b" $2 torrentgetter:~/data/
+gcloud compute --project "datacenterscaleproject" ssh --zone "us-east1-b" "torrentgetter" --command "chmod +x data/$2 && ./data/$2"
+
+# Step 10 : Send to kafka
+gcloud compute  scp --zone "us-east1-b" kafkaProducer.py torrentgetter:~/
+gcloud compute --project "datacenterscaleproject" ssh --zone "us-east1-b" "torrentgetter" --command "python kafkaProducer.py data/ $kafka_ips"

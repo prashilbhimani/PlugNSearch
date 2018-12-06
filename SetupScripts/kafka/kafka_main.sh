@@ -5,13 +5,13 @@
 
 
 #Create nodes
-gcloud beta compute --project="datacenterscaleproject" instances create zookeeper --zone=us-east1-b --machine-type=n1-standard-4 --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --scopes=https://www.googleapis.com/auth/cloud-platform --tags=http-server,https-server --image=debian-9-stretch-v20181011 --image-project=debian-cloud --boot-disk-size=50GB --boot-disk-type=pd-standard --boot-disk-device-name=zookeeper
+gcloud beta compute --project="datacenterscaleproject" instances create kafkazookeeper --zone=us-east1-b --machine-type=n1-standard-4 --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --scopes=https://www.googleapis.com/auth/cloud-platform --tags=http-server,https-server --image=debian-9-stretch-v20181011 --image-project=debian-cloud --boot-disk-size=50GB --boot-disk-type=pd-standard --boot-disk-device-name=kafkazookeeper
 for i in `seq 1 $1`;do
 	gcloud beta compute --project="datacenterscaleproject" instances create "kafka$i" --zone=us-east1-b --machine-type=n1-standard-4 --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --scopes=https://www.googleapis.com/auth/cloud-platform --tags=http-server,https-server --image=debian-9-stretch-v20181011 --image-project=debian-cloud --boot-disk-size=100GB --boot-disk-type=pd-standard --boot-disk-device-name="kafka$i"
 done
 
 #Get Ips
-zk=$(gcloud compute instances describe zookeeper |sed -n "/networkIP\:\ /s/networkIP\:\ //p")
+zk=$(gcloud compute instances describe kafkazookeeper |sed -n "/networkIP\:\ /s/networkIP\:\ //p")
 kafka=()
 for i in `seq 1 $1`;do
 	kafka+=($(gcloud compute instances describe "kafka$i" |sed -n "/networkIP\:\ /s/networkIP\:\ //p"))
@@ -19,8 +19,8 @@ done
 ips="$(IFS=, ; echo "${kafka[*]}")"
 
 #Setup zookeeper
-gcloud compute scp --zone "us-east1-b" zookeeper_setup.sh zookeeper:~/
-gcloud compute --project "datacenterscaleproject" ssh --zone "us-east1-b" "zookeeper" --command "chmod +x zookeeper_setup.sh && ./zookeeper_setup.sh $zk"
+gcloud compute scp --zone "us-east1-b" zookeeper_setup.sh kafkazookeeper:~/
+gcloud compute --project "datacenterscaleproject" ssh --zone "us-east1-b" "kafkazookeeper" --command "chmod +x zookeeper_setup.sh && ./zookeeper_setup.sh $zk"
 
 #Setup Kafka
 for i in `seq 1 $1`;do
@@ -29,7 +29,7 @@ for i in `seq 1 $1`;do
 done
 
 #Start Zookeeper
-gcloud compute --project "datacenterscaleproject" ssh --zone "us-east1-b" "zookeeper" --command "zookeeper-3.4.13/bin/zkServer.sh start"
+gcloud compute --project "datacenterscaleproject" ssh --zone "us-east1-b" "kafkazookeeper" --command "zookeeper-3.4.13/bin/zkServer.sh start"
 
 #Start Kafka
 for i in `seq 1 $1`;do
