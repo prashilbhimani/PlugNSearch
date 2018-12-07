@@ -71,13 +71,12 @@ public class DoESMapping {
 				String key = pairs[0].trim();
 				String indexBoolean = pairs[1].trim().toLowerCase();
 				String type = pairs[2].trim().toLowerCase();								
-				internalMap.put("type", type);
+				
 				if(type.equals("object")) {
-					if(indexBoolean.equals("n")) {
-						internalMap.put("enabled", false);
-					} 
+					internalMap.put("enabled", false);
 				} else {
-					if(indexBoolean.equals("n")) {						
+					internalMap.put("type", type);
+					if(indexBoolean.equals("n")) {							
 						internalMap.put("index", false);				
 					}		
 				}

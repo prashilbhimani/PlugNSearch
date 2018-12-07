@@ -29,9 +29,11 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
+import org.json.JSONObject;
 
 public class ESAPI {
 	private RestHighLevelClient client;
@@ -50,6 +52,19 @@ public class ESAPI {
 			return null;
 		}
 		
+	}
+	public IndexResponse getIndexResponseForStr(String jsonString, String index, String type, String id) {
+		System.out.println(jsonString);
+
+		IndexRequest request = new IndexRequest(index,type);   
+		request.source(jsonString, XContentType.JSON);
+		try {
+			IndexResponse indexResponse = client.index(request, RequestOptions.DEFAULT);
+			return indexResponse;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;			
+		}
 	}
 	public IndexResponse getIndexResponse(Map<String, Object> jsonMap, String index, String type, String id) {
 		IndexRequest indexRequest = new IndexRequest(index, type, id).source(jsonMap);			 
