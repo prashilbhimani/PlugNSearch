@@ -6,10 +6,9 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
-import org.json.JSONObject;
+
 
 public class DoESMapping {
 
@@ -60,6 +59,7 @@ public class DoESMapping {
 		AcknowledgedResponse putMappingResponse = esclient.performMapping(index, type, message);
 		System.out.println("put mapping is : " + putMappingResponse.isAcknowledged());
 		System.out.println("done");
+		System.exit(0);
 
 	}
 	private static Map<String, Object>getIndexData(ArrayList<String> lines) {

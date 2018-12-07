@@ -104,7 +104,7 @@ public class GetTweetKeys {
 			}
 			
 			result.put("NumberofUniqueValues", valueArr.length);
-			result.put("values", values);
+//			result.put("values", values);
 			context.write(new Text(result.toString()), new Text());
 
 		}
