@@ -25,8 +25,6 @@ public class GetTweetKeys {
 	public static JSONObject getTypeAndValue(JSONObject tweetJson, String key) {
 		Object tweetvalue = tweetJson.get(key);
 		JSONObject result = new JSONObject();
-		result.put("type", JSONObject.NULL.toString());
-		result.put("value", JSONObject.NULL.toString());
 
 		if(tweetvalue instanceof Long || tweetvalue instanceof Double || tweetvalue instanceof Float || tweetvalue instanceof Integer) {
 			result.put("type", "long");
@@ -34,16 +32,19 @@ public class GetTweetKeys {
 		} else if(tweetvalue instanceof Boolean) {
 			result.put("type", "boolean");
 			result.put("value", String.valueOf(tweetJson.getBoolean(key)));
-		} else if(tweetvalue instanceof String || tweetvalue instanceof Byte) {
+		} else if(tweetvalue instanceof String) {
 			result.put("type", "text");
 			result.put("value", tweetJson.getString(key));
-		} else if(tweetvalue instanceof JSONArray) {
+		} else if(tweetvalue instanceof JSONArray ||  tweetvalue instanceof Byte) {
 			result.put("type", "nested");
 			result.put("value", tweetJson.getJSONArray(key).toString());
 		} else if(tweetvalue instanceof JSONObject) {
 			result.put("type", "object");
 			result.put("value", tweetJson.getJSONObject(key).toString());
-		} 
+		} else {
+			result.put("type", "object");
+			result.put("value", JSONObject.NULL.toString());
+		}
 		return result;
 	}
 
@@ -70,13 +71,13 @@ public class GetTweetKeys {
 			Iterator<Text> iterator = ones.iterator();			
 			
 			while(iterator.hasNext()) {
-				System.out.println("key is: " + term.toString());
+//				System.out.println("key is: " + term.toString());
 				Text tweet = iterator.next();
 				JSONObject tweetJson = new JSONObject(tweet.toString());
 				JSONObject typeAndValue = GetTweetKeys.getTypeAndValue(tweetJson, term.toString());
 				
 				typeSet.add(typeAndValue.getString("type"));
-				if(typeAndValue.getString("type").equals("null")) {
+				if(typeAndValue.getString("value").equals("null")) {
 					nullCount++;
 				} else{
 					appearedCount++;	
