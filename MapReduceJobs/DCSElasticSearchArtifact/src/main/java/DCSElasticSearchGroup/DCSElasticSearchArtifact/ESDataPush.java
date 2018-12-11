@@ -39,7 +39,7 @@ public class ESDataPush {
 				dummy.put("title", "this is title");
 				dummy.put("name", "this is name");
 				dummy.put("age", 20);*/
-				IndexResponse indexResponse = esclient.getIndexResponseForStr( tweetJson.toString(), "testmapping", "_doc", null);
+				IndexResponse indexResponse = esclient.getIndexResponseForStr( tweetJson.toString(), "data", "data", null);
 				esclient.processIndexResponse(indexResponse);
 				
 				
